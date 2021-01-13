@@ -1,0 +1,86 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.1 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{mcann}{article}{}
+      \name{author}{1}{}{%
+        {{hash=42a27da9283a5c54969e5bbf64ccb352}{%
+           family={McCann},
+           familyi={M\bibinitperiod},
+           given={L.\bibnamedelimi I.},
+           giveni={L\bibinitperiod\bibinitdelim I\bibinitperiod}}}%
+      }
+      \strng{namehash}{42a27da9283a5c54969e5bbf64ccb352}
+      \strng{fullhash}{42a27da9283a5c54969e5bbf64ccb352}
+      \strng{bibnamehash}{42a27da9283a5c54969e5bbf64ccb352}
+      \strng{authorbibnamehash}{42a27da9283a5c54969e5bbf64ccb352}
+      \strng{authornamehash}{42a27da9283a5c54969e5bbf64ccb352}
+      \strng{authorfullhash}{42a27da9283a5c54969e5bbf64ccb352}
+      \field{sortinit}{1}
+      \field{sortinithash}{50c6687d7fc80f50136d75228e3c59ba}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{BFY Proceedings}
+      \field{title}{Introducing students to single photon detection with a reverse biased LED in avalanche mode}
+      \field{year}{2015}
+      \field{pages}{64\bibrangedash 67}
+      \range{pages}{4}
+    \endentry
+    \entry{lm311}{misc}{}
+      \name{author}{1}{}{%
+        {{hash=17ef873f8398a55909fb99e97180bc4c}{%
+           family={Phillips},
+           familyi={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{17ef873f8398a55909fb99e97180bc4c}
+      \strng{fullhash}{17ef873f8398a55909fb99e97180bc4c}
+      \strng{bibnamehash}{17ef873f8398a55909fb99e97180bc4c}
+      \strng{authorbibnamehash}{17ef873f8398a55909fb99e97180bc4c}
+      \strng{authornamehash}{17ef873f8398a55909fb99e97180bc4c}
+      \strng{authorfullhash}{17ef873f8398a55909fb99e97180bc4c}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{LM311N component datasheet}
+      \verb{urlraw}
+      \verb https://www.alldatasheet.com/datasheetpdf/pdf/17875/PHILIPS/LM311N.html
+      \endverb
+      \verb{url}
+      \verb https://www.alldatasheet.com/datasheetpdf/pdf/17875/PHILIPS/LM311N.html
+      \endverb
+    \endentry
+    \entry{pgauss}{misc}{}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
+      \field{labeltitlesource}{title}
+      \field{title}{Gaussian distribution as a limit of the Poisson distribution}
+      \field{year}{2012}
+      \verb{urlraw}
+      \verb https://www.roe.ac.uk/japwww/teaching/astrostats/astrostats2012_part2.pdf
+      \endverb
+      \verb{url}
+      \verb https://www.roe.ac.uk/japwww/teaching/astrostats/astrostats2012_part2.pdf
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

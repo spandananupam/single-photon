@@ -1,0 +1,240 @@
+
+\documentclass{double}
+
+\begin{document}
+\title{Inexpensive Single Photon Detection Circuit with AND114R LEDs}
+\author{Spandan Anupam\\%
+\href{https://github.com/surelynottrue/}{GitHub}}
+\date{%
+	\small\itshape School of Physical Sciences\\%
+	\normalfont National Institute of Science Education and Research\\[2ex]%
+	\normalsize\today}
+\maketitle
+
+\begin{multicols*}{2}
+\section{Experimental Apparatus}
+\begin{enumerate}
+	\item LED (AND114R)
+	\item Comparator (LM311)
+	\item $10\si{\kilo\ohm}$ Potentiometer
+	\item $100-900\si{\kilo\ohm}$ Resistors ($3\times1\si{\kilo\ohm}$, $2\times1\si{\mega\ohm}$) 
+	\item $1-20\si{\kilo\ohm}$ Resistors
+	\item Arduino UNO
+	\item Jumper wires
+	\item Breadboard(s)
+	\item Multimeter
+	\item Constant potential source ($24\si{V}, 15\si{V}, 5\si{V}$)
+	\item 3D printer and filament
+\end{enumerate}
+
+\section{Theory}
+For this experiment, we will be following several references, but the most notable of them is \cite{mcann}.
+\label{theory}
+\subsection{Avalanche Photodiodes}
+We normally use avalanche photodiodes for single photon experiments, given that detection of a singular photon turns out to be really hard with a normal photodiode. To understand how these work, we may look at their analog, photomultipliers. APDs are considered the semiconductor analog of photomultipliers, used in nuclear counting experiments.
+
+The way these work is, on a high reverse bias voltage, something called \emph{impact ionization} starts to happen, where after one electron has been generated, it starts accelerating and bumping into other electrons, and making them free. This process continues for a while and makes a detectable current, which we can pass through a comparator to get rid of the noise. The process of current multiplication here is called \emph{avalanche breakdown}, which is used for these diodes.
+
+But given the sensitivity of these, we could have guessed that they cost a lot. For student experiments here, we can replicate a similar effect with a AND114R LED, which is comparatively inexpensive, and easy to find. The idea here is not to find a single photon, but is to detect even a single photon when flooded with light, given the inefficiency of these diodes. 
+
+There will come a time when due to the Joule heating caused due to the flow of current through the diode, an extra avalanche might be triggered while one is happening. This is known as \emph{afterpulsing}, and will lead to a higher count of photons in our readings.
+
+\subsection{Comparator}
+Comparators are pretty easy to understand, for us, they are just an OpAmp circuit with two inputs, with a \texttt{True} output if inverting input is greater than the non inverting input and \texttt{False} otherwise. For our case, we are using a LM311N comparator IC, whose datasheet can be found in \cite{lm311}.
+
+For our case, we are using the comparator to mellow the noise from the background. Given that we are working in a relatively open environment, we have a lot of noise ready to drown our actual data. We can set a cap on what we are allowing and what we are not, using a comparator and a voltage divider circuit as shown in the diagram. We can then connect this circuit to our reverse biased LED to complete the circuit needed.
+
+\subsection{Circuit}
+We have the circuit, as discussed in the sections above here. We can see here, that we can have two classes of resistors that are used. 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{images/circuit.pdf}
+	\caption{Detector circuit, made with the help of ref 1}
+\end{figure}
+The quenching resistor, and the pull up resistor. Changing the quenching resistor will change the pulse width, essentially deciding when the pulse is ``quenched''. The pull up resistor however, ``pulls up'' the output voltage. Since we need a $5\si{V}$ output for our detector, here, the internal ADC of the Arduino board.
+
+It is to be noted that instead of the Expeyes and KuttyPy boards, I have been able to modernize the experiment a bit and compress the whole circuit into a single Arduino board, using two small snippets of code that will be mentioned in Section \ref{appendix}.
+
+\subsection{Counting Statistics}
+APDs are quite similar to Gieger counters that we use in nuclear physics experiments. They are even similar in the fact that the triggered events are random and will follow certain statistics, for our case, it is gaussian, considering the number of events that we are counting. So, within the error limits, we should be seeing some curve like:
+\begin{equation}
+	p(x,a,b,c) = a \times e^{(x-b)^2 / 2c^2}
+\end{equation}
+Where we have allowed $a, b, c$ to be the fit parameters. We will see soon, in the Section \ref{plots} that this relation holds and we indeed have a gaussian distribution, some prettier than the others.
+
+Au contraire, when we are expecting smaller, random counts (really small intensities), where counts in time are independent from each other (exactly the same condition), we \emph{could} see a poisson distribution. It depends on a single parameter $a$, and is given by:
+\begin{equation}
+	p(x,\lambda) = \frac{\lambda^x e^{-\lambda}}{x!}
+	\label{pois}
+\end{equation}
+We can show that gaussian distribution is just an approximation of the poisson distribution in the limit of a high mean, here, $a$. Using Eq \ref{pois}, when we have $x = \lambda(1+\delta)$, at high $\lambda$, and a small $\delta$, we will see a transition from discrete $p(x)$ to a continous $p$. In that limit, we can use the stirling approximation as:
+\begin{equation}
+	x! = \sqrt{2\pi x}e^{-x}x^x
+\end{equation}
+Plugging this in, we will get something like:
+\begin{align}
+	p(x) &= \frac{\lambda^{\lambda(1+\delta)}e^{-\lambda}}{\sqrt{2\pi}e^{-\lambda(1+\delta)}[\lambda(1+\delta)]^{(\lambda(1+\delta) + 1/2)}}\nonumber\\
+	&= \frac{e^{\lambda\delta}(1+\delta)^{-(\lambda(1+\delta) + 1/2)}}{\sqrt{2\pi\lambda}}\nonumber\\
+	&= \frac{e^{-(x-\lambda)^2/(2\lambda)}}{\sqrt{2\pi\lambda}}
+\end{align}
+The full proof from the step 2 to 3 has been given in \cite{pgauss}. Keeping that aside, this tells us that a higher number of counts, we should be seeing a gaussian distribution instead of poisson, which we are, as shown later.
+
+While we see those measurements, we got another curve to look at. In random distributions, the probability distribution of time between events is given by an exponential, and the time shift is caused due to the dead time. So, we get the equation as:
+\begin{equation}
+	p(t) = r \times e^{-r(t+\tau)} + c
+\end{equation}
+Here, $\tau$ will give us the dead time of the detector, which we will calculate using our experimental data.
+
+\section{Modelling}
+\label{model}
+Tests in diffused lighting showed me that it was essential to shield the detector from the background lighting. Given the high level of noise these dectors are capable of detecting, I designed a simple walled box to block out most of the light. The idea behind this design is pretty simple, the mode the pin holes, the straighter the light ray has to be, to pass through them. And, putting a mirror to make the arrangement at $90^\circ$ allows me to cut through even more stray light. The effect is visible in the measurements. Before putting the apparatus in the box, even a dark room would give me a gaussian distribution from the noise itself. The post-box background reading speaks volumes about what the effect of this little 3D printed contraption was.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{images/model.pdf}
+	\caption{3D blender model of the diode casing. The labels are given as: (1) Breadboard clips, (2) LED holder and light holes, (3) Wall to prevent light getting near the diode, (4) Mirror bracket and (5) Box cover}
+\end{figure}
+A bit about the setup: I made clips and allowed for manual alignment and adjustment. On second thoughts, allowing for a fabry-perot style adjustment system would have been better, but this system does the job. The breadboard clips onto the holding spot and the LED goes into the hole, and is held on using a two part epoxy. The mirror bracket allows is to push fit a mirror at exactly $45^\circ$. After printing, I blacked out the whole interior to prevent diffused light from getting in.
+
+\section{Plots}
+The first plot we will be looking at will be the pulse shapes for different values of the quenching resistors.
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/comp.pgf}
+	}
+\end{figure}
+I took the liberty to clean out the base of all the signal pulses, because they are unimportant. This plot clearly shows that as $\text{width} \propto R$. Maybe not linearly, but it does change with the resistance.
+\label{plots}
+\subsection{Open lighting}
+These plots are for readings taken for number of pulses per $10 \text{ and } 100 \si{ms}$ in diffused, open lab lighting.
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+	\input{../plots/plot10.pgf}
+}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plot100.pgf}
+	}
+\end{figure}
+\subsection{Laser background}
+These were the readings taken in the closed enclosure, with a collimated laser beam. 
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plotzero100.pgf}
+	}
+\end{figure}
+The noise drops straight to zero, except for the spike at 5, which seems to be the background due to some radiation. This reading comes to use later, because we had to clean up our data for some other readings later, when we had a consistent low background count for all of our time slots.
+\subsection{Laser at two intensities}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plothighn10.pgf}
+	}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plothigh100.pgf}
+	}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plotlow10.pgf}
+	}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plotlow100.pgf}
+	}
+\end{figure}
+\subsection{Time between pulses}
+\begin{figure}[H]
+	\centering
+	\resizebox{0.8\columnwidth}{!}{%
+		\input{../plots/plotdifflow.pgf}
+	}
+\end{figure}
+We see that the graph fits fairly well with an exponential model, and the dead time can be calculated as $6516.5\pm 325.82 \si{\mu s}$. The gaussian fitting results show us a $\chi^2$ value of around $80$ and an extremely low p-value (in the order of $10^{-5}$), which to my understanding, does indicate that our assumption of the distribution being gaussian is correct.
+
+\section{Conclusion}
+To conclude, I would say that the experiment was a success, with multiple readings showing a gaussian distribution. We were able to make a setup that is able to generate these results with fairly good repeatability and a commendably low noise to signal ratio. Though I had to clean up \emph{some} of the data, that was expected with this kind of a setup, and the process has been referenced in multiple sources. Also, using the usual exponential decay curve in \texttt{scipy.optimize} and \texttt{python}, we were able to calculate the dead time to be $6516.5\pm 325.82 \si{\mu s}$, and from multiple readings, saw that it stayed in the $3\text{--}7\si{\milli s}$ range, which is less than our minumum time slot of $10\si{\milli s}$.
+
+It is to be noted that the curve being fit with a gaussian is all that matters, and the FWHM in this case, would just represent the intensity of the radiation incident on the detector. The height of the ``histogram'' points will depend on the bin size, and will have no real effect on the curve that we get. We can see that be it a higher, or lower intensity, it doesnt affect the curve being a gaussian, and that's all that matters.
+
+\section{Appendix}
+\label{appendix}
+Just two small snippets of C++ code were used to run the arduino according to our requirements. All of the code has been uploaded ready for use in my \href{https://github.com/surelynottrue/single-photon}{GitHub}. 
+
+The first code here is for counting the number of pulses in a set time. In this example, the interval has been set to $100\si{ms}$.
+\lstset{
+	language=C++,
+	basicstyle=\ttfamily\footnotesize,
+	frame=trBL,
+}
+\begin{lstlisting}[caption={num\_pulses.ino}]
+int pin = 7;
+unsigned long period;
+unsigned long timeRes = 100;
+int numPulses = 0;
+unsigned long timeStart = millis();
+
+void setup() {
+	Serial.begin(9600);
+	pinMode(pin, INPUT);
+}
+
+void loop() {
+	if (millis() - timeStart >= timeRes) {
+		Serial.println(numPulses);
+		numPulses = 0;
+		timeStart = timeStart + timeRes; 
+	}
+	period = pulseIn(pin, HIGH);
+	if (period > 0) {
+		numPulses++;
+	}
+}
+\end{lstlisting}
+
+The second snippet here measures the time difference between the dropping and rising edge of a pulse, in $\si{\mu s}$.
+\begin{lstlisting}[caption={time\_difference.ino}]
+int pin = 7;
+unsigned long duration;
+
+void setup() {
+	Serial.begin(9600);
+	pinMode(pin, INPUT);
+}
+
+void loop() {
+	duration = pulseIn(pin, LOW);
+	Serial.println(duration);
+}	
+\end{lstlisting}
+Both of these can be compiled and run on the Arduino, and possibly on other ATMEGA chips after some tweaking.
+
+Apart from that, to give an idea of the setup involved to get the readings that we need, I have attached an image of the full setup that we are using, on the optical breadboard table.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{images/setup.pdf}
+	\caption{Full view shot of the setup with the top open}
+\end{figure}
+
+\section{Acknowledgements}
+I would like to extend a special thanks to Prof. Subhankar Mishra for lending me his 3D printer for use in this project. I would also like to thank Prof. Kartik Senapati and Dr. G Santosh Babu for their help during the experiment.
+
+\section{References}
+\begin{enumerate}
+	\item \fullcite{mcann}
+	\item \fullcite{lm311}
+	\item \fullcite{pgauss}
+\end{enumerate}
+\end{multicols*}
+\clearpage
+\end{document}
